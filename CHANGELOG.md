@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.1] — 2026-02-12
+
+### Changed
+- Added default export for `DevProfiler` (dual export: default + named)
+
 ## [1.1.0] — 2026-02-12
 
 ### Fixed

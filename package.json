@@ -1,6 +1,6 @@
 {
   "name": "react-dev-profiler",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Real-time React performance monitoring — frame times, FPS, DOM mutations, memory, and more. Zero overhead in production.",
   "author": "Frederic Denis <billywild87@users.noreply.github.com> (https://github.com/billywild87)",
   "license": "MIT",
