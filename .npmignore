@@ -1,0 +1,6 @@
+devprofiler/
+tsup.config.ts
+tsconfig.json
+.git
+.github
+node_modules
