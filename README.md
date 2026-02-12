@@ -5,6 +5,8 @@ Real-time React performance monitoring for development. Zero overhead in product
 [![npm version](https://img.shields.io/npm/v/react-dev-profiler)](https://www.npmjs.com/package/react-dev-profiler)
 [![license](https://img.shields.io/npm/l/react-dev-profiler?v=2)](./LICENSE)
 
+![react-dev-profiler demo](assets/demo.png)
+
 ## What it does
 
 Wrap any part of your React app with `<DevProfiler>` and get a floating panel that shows:
