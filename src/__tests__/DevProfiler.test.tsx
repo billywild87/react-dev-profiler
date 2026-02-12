@@ -69,7 +69,7 @@ describe('DevProfiler', () => {
         )
         const wrapper = container.firstChild as HTMLElement
         expect(wrapper.tagName).toBe('DIV')
-        expect(wrapper.className).toContain('wrapper')
+        expect(wrapper.style.display).toBe('contents')
     })
 
     it('opens the panel on toggle event', async () => {

@@ -109,7 +109,7 @@ describe('DevStatsPanel', () => {
         const props = createMockProps()
         render(<DevStatsPanel {...props} />)
         // The panel should be a direct child of body (portaled)
-        const panels = document.body.querySelectorAll('[class*="panel"]')
+        const panels = document.body.querySelectorAll('[style*="position: fixed"]')
         expect(panels.length).toBeGreaterThan(0)
     })
 })

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import styles from './DevProfiler.module.css'
+import { FLASH_OUTLINE } from './styles'
 import type { PanelPosition } from './types'
 
 /**
@@ -166,8 +166,12 @@ export function useRenderFlash(wrapperRef: React.RefObject<HTMLDivElement | null
             mutationCount.current++
             if (!wrapperRef.current || mutationCount.current <= 1) return
             const el = wrapperRef.current
-            el.classList.add(styles.flash)
-            setTimeout(() => el.classList.remove(styles.flash), 150)
+            el.style.outline = FLASH_OUTLINE
+            el.style.outlineOffset = '-2px'
+            setTimeout(() => {
+                el.style.outline = ''
+                el.style.outlineOffset = ''
+            }, 150)
         })
         observer.observe(wrapperRef.current, { childList: true, subtree: true })
         return () => observer.disconnect()

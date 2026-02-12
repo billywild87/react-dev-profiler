@@ -7,13 +7,13 @@
 
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import styles from './DevProfiler.module.css'
+import { s } from './styles'
 import { useAnchorPosition } from './hooks'
 import type { PanelPosition } from './types'
 
 /** Computes fixed-position styles based on the chosen panel position. */
 function getButtonStyle(pos: { top: number; left: number }, position: PanelPosition): CSSProperties {
-    const style: CSSProperties = {}
+    const style: CSSProperties = { ...s.toggleBtn }
     if (position.startsWith('bottom')) {
         style.bottom = window.innerHeight - pos.top + 8
     } else {
@@ -65,12 +65,11 @@ export function ToggleButton({
 
     return createPortal(
         <button
-            className={styles.toggleBtn}
             onClick={onClick}
             title="Dev Profiler (Ctrl+I)"
             style={getButtonStyle(pos, position)}
         >
-            <span className={styles.toggleFps} style={{ color: fpsColor }}>{fps}</span>
+            <span style={{ ...s.toggleFps, color: fpsColor }}>{fps}</span>
         </button>,
         document.body
     )

@@ -6,7 +6,6 @@
  */
 
 import { Profiler, useRef, useState, useEffect, useCallback, type ReactNode } from 'react'
-import styles from './DevProfiler.module.css'
 import { type ReactProfilerData, type PanelPosition, INITIAL_PROFILER } from './types'
 import { __DEV__ } from './env'
 import { useDomTracker, useRenderRate, useRenderFlash, useLongTasks } from './hooks'
@@ -109,7 +108,7 @@ export function DevProfiler({
     if (!__DEV__) return <>{children}</>
 
     return (
-        <div ref={wrapperRef} className={styles.wrapper}>
+        <div ref={wrapperRef} style={{ display: 'contents' }}>
             <Profiler id="DevProfiler" onRender={onRender}>
                 {children}
             </Profiler>

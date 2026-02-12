@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import styles from './DevProfiler.module.css'
+import { s } from './styles'
 import { useAnchorPosition, useDraggable, useDomTracker, useRenderRate, useLongTasks } from './hooks'
 import { type ReactProfilerData, type PanelPosition, type DevStats, HISTORY_SIZE, INITIAL_STATS, percentile } from './types'
 
@@ -19,7 +19,7 @@ function FrameTimeGraph({ history }: { history: number[] }) {
     const barW = Math.max(1, w / HISTORY_SIZE - 0.5)
 
     return (
-        <div className={styles.graphWrap}>
+        <div style={s.graphWrap}>
             <svg width={w} height={h} style={{ display: 'block' }}>
                 <rect width={w} height={h} rx={3} fill="#111" />
                 {/* 60 fps guideline */}
@@ -42,10 +42,10 @@ function FrameTimeGraph({ history }: { history: number[] }) {
 /** Single label → value row used throughout the panel. */
 function StatRow({ label, value, sub, color = '#4ade80' }: { label: string, value: string, sub?: string, color?: string }) {
     return (
-        <div className={styles.row}>
-            <span className={styles.rowLabel}>{label}</span>
+        <div style={s.row}>
+            <span style={s.rowLabel}>{label}</span>
             <span>
-                <span className={styles.rowValue} style={{ color }}>{value}</span>
+                <span style={{ ...s.rowValue, color }}>{value}</span>
                 {sub && <span style={{ color: '#444', fontSize: 9, marginLeft: 4 }}>{sub}</span>}
             </span>
         </div>
@@ -59,6 +59,7 @@ function getPanelStyle(
     position: PanelPosition,
 ): CSSProperties {
     const style: CSSProperties = {
+        ...s.panel,
         transform: `translate(${offset.x}px, ${offset.y}px)`,
     }
     if (position.startsWith('bottom')) {
@@ -203,21 +204,25 @@ export function DevStatsPanel({
         : 0
     const p99Color = stats.frameTimeP99 > 33 ? '#ef4444' : stats.frameTimeP99 > 16.67 ? '#f59e0b' : '#4ade80'
 
+    const exportStyle: CSSProperties = exported
+        ? { ...s.iconBtn, ...s.iconBtnActive }
+        : s.iconBtn
+
     return createPortal(
-        <div className={styles.panel} style={getPanelStyle(pos, offset, position)}>
+        <div style={getPanelStyle(pos, offset, position)}>
             <div
-                className={styles.panelHeader}
+                style={s.panelHeader}
                 {...dragHandlers}
             >
-                <span className={styles.panelTitle}>
+                <span style={s.panelTitle}>
                     Dev Profiler
                     {instanceCount > 1 && instanceId && (
-                        <span className={styles.instanceBadge}>{instanceId}</span>
+                        <span style={s.instanceBadge}>{instanceId}</span>
                     )}
                 </span>
-                <div className={styles.headerActions}>
+                <div style={s.headerActions}>
                     <button
-                        className={`${styles.exportBtn} ${exported ? styles.exportBtnActive : ''}`}
+                        style={exportStyle}
                         onClick={handleExport}
                         title={exported ? 'Copied!' : 'Copy stats to clipboard'}
                     >
@@ -232,20 +237,20 @@ export function DevStatsPanel({
                             </svg>
                         )}
                     </button>
-                    <button className={styles.resetBtn} onClick={handleReset} title="Reset counters">
+                    <button style={s.iconBtn} onClick={handleReset} title="Reset counters">
                         <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
                             <path d="M14 1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1 0-2h1.6A6 6 0 0 0 2.07 7.5a1 1 0 1 1-1.97-.36A8 8 0 0 1 13 3.35V2a1 1 0 0 1 1-1zM2 15a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h4a1 1 0 0 1 0 2H4.4A6 6 0 0 0 13.93 8.5a1 1 0 1 1 1.97.36A8 8 0 0 1 3 12.65V14a1 1 0 0 1-1 1z"/>
                         </svg>
                     </button>
-                    <button className={styles.closeBtn} onClick={onClose}>✕</button>
+                    <button style={s.closeBtn} onClick={onClose}>✕</button>
                 </div>
             </div>
 
-            <div className={styles.body}>
-                <span className={styles.section}>Rendering</span>
+            <div style={s.body}>
+                <span style={s.section}>Rendering</span>
                 <StatRow label="Frame time" value={`${stats.frameTime.toFixed(1)}ms`} sub={`${fps} fps`} color={ftColor} />
                 <FrameTimeGraph history={stats.frameTimeHistory} />
-                <div className={styles.miniRow}>
+                <div style={s.miniRow}>
                     <span>min {stats.frameTimeMin.toFixed(1)}</span>
                     <span>max {stats.frameTimeMax.toFixed(1)}</span>
                     <span style={{ color: p99Color }}>p99 {stats.frameTimeP99.toFixed(1)}</span>
@@ -253,26 +258,26 @@ export function DevStatsPanel({
                 <StatRow label="Renders/s" value={String(stats.rendersPerSecond)} color={rpsColor} />
                 <StatRow label="Long tasks" value={String(stats.longTasks)} color={stats.longTasks > 0 ? '#f59e0b' : '#4ade80'} />
 
-                <div className={styles.separator} />
-                <span className={styles.section}>React Profiler</span>
+                <div style={s.separator} />
+                <span style={s.section}>React Profiler</span>
                 <StatRow label="Phase" value={stats.profiler.phase} color="#888" />
                 <StatRow label="Render" value={`${stats.profiler.actualDuration.toFixed(2)}ms`} color={actualColor} />
                 <StatRow label="Base (no memo)" value={`${stats.profiler.baseDuration.toFixed(2)}ms`} color="#888" />
                 <StatRow label="Memo gain" value={`${memoGain}%`} color={memoGain > 50 ? '#4ade80' : memoGain > 20 ? '#f59e0b' : '#ef4444'} />
                 <StatRow label="Commits" value={String(stats.profiler.commitCount)} />
 
-                <div className={styles.separator} />
-                <span className={styles.section}>DOM</span>
+                <div style={s.separator} />
+                <span style={s.section}>DOM</span>
                 <StatRow label="Nodes" value={stats.domNodes.toLocaleString()} />
                 <StatRow label="Mutations" value={String(stats.domMutations)} />
                 <StatRow label="Size" value={stats.dimensions} color="#888" />
 
-                <div className={styles.separator} />
-                <span className={styles.section}>Memory</span>
+                <div style={s.separator} />
+                <span style={s.section}>Memory</span>
                 <StatRow label="JS Heap" value={stats.memory > 0 ? `${stats.memory} MB` : 'N/A'} />
             </div>
 
-            <div className={styles.footer}>Ctrl+I to toggle</div>
+            <div style={s.footer}>Ctrl+I to toggle</div>
         </div>,
         document.body
     )
