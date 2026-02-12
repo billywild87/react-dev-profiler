@@ -57,12 +57,15 @@ export function DevProfiler({
     children,
     position = 'bottom-left',
     id,
+    accentColor = '#6366f1',
 }: {
     children: ReactNode
     /** Where to anchor the panel. @default 'bottom-left' */
     position?: PanelPosition
     /** Optional identifier — shown in the panel when multiple instances are active. */
     id?: string
+    /** Accent color for the toggle button border/glow. @default '#6366f1' */
+    accentColor?: string
 }) {
     const wrapperRef = useRef<HTMLDivElement>(null)
     const [open, setOpen] = useState(false)
@@ -112,7 +115,7 @@ export function DevProfiler({
             <Profiler id="DevProfiler" onRender={onRender}>
                 {children}
             </Profiler>
-            {!open && <ToggleButton targetRef={wrapperRef} onClick={toggle} position={position} />}
+            {!open && <ToggleButton targetRef={wrapperRef} onClick={toggle} position={position} accentColor={accentColor} />}
             {open && (
                 <DevStatsPanel
                     targetRef={wrapperRef}

@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { s } from './styles'
-import { useAnchorPosition, useDraggable, useDomTracker, useRenderRate, useLongTasks } from './hooks'
+import { useAnchorPosition, useDraggable, useDomTracker, useRenderRate, useLongTasks, getEffectiveRect } from './hooks'
 import { type ReactProfilerData, type PanelPosition, type DevStats, HISTORY_SIZE, INITIAL_STATS, percentile } from './types'
 
 /** Rolling bar chart of frame times (last 60 samples). */
@@ -52,6 +52,8 @@ function StatRow({ label, value, sub, color = '#4ade80' }: { label: string, valu
     )
 }
 
+const GAP = 8
+
 /** Computes fixed-position styles based on the chosen panel position + drag offset. */
 function getPanelStyle(
     pos: { top: number; left: number },
@@ -63,14 +65,14 @@ function getPanelStyle(
         transform: `translate(${offset.x}px, ${offset.y}px)`,
     }
     if (position.startsWith('bottom')) {
-        style.bottom = window.innerHeight - pos.top
+        style.bottom = window.innerHeight - pos.top + GAP
     } else {
-        style.top = pos.top
+        style.top = pos.top + GAP
     }
     if (position.endsWith('right')) {
-        style.right = window.innerWidth - pos.left
+        style.right = window.innerWidth - pos.left + GAP
     } else {
-        style.left = pos.left
+        style.left = pos.left + GAP
     }
     return style
 }
@@ -132,7 +134,8 @@ export function DevStatsPanel({
                 const sorted = [...allFrameTimes.current].sort((a, b) => a - b)
 
                 const el = targetRef.current
-                const dims = el ? `${el.offsetWidth} x ${el.offsetHeight}` : '–'
+                const r = el ? getEffectiveRect(el) : null
+                const dims = r ? `${Math.round(r.width)} x ${Math.round(r.height)}` : '–'
 
                 // Chrome-only: performance.memory exposes JS heap usage
                 const perf = performance as any
@@ -170,28 +173,21 @@ export function DevStatsPanel({
         onReset()
     }, [onReset])
 
-    // Copy current stats as JSON to clipboard.
+    // Download current stats as a JSON file.
     const handleExport = useCallback(() => {
         const payload = { timestamp: new Date().toISOString(), ...stats }
         const json = JSON.stringify(payload, null, 2)
-        try {
-            navigator.clipboard.writeText(json).then(() => {
-                setExported(true)
-                setTimeout(() => setExported(false), 1200)
-            })
-        } catch {
-            // Fallback for non-secure contexts
-            const ta = document.createElement('textarea')
-            ta.value = json
-            ta.style.position = 'fixed'
-            ta.style.opacity = '0'
-            document.body.appendChild(ta)
-            ta.select()
-            document.execCommand('copy')
-            document.body.removeChild(ta)
-            setExported(true)
-            setTimeout(() => setExported(false), 1200)
-        }
+        const blob = new Blob([json], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `devprofiler-${Date.now()}.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        setExported(true)
+        setTimeout(() => setExported(false), 1200)
     }, [stats])
 
     // Color thresholds: green = good, amber = warning, red = bad
@@ -209,11 +205,8 @@ export function DevStatsPanel({
         : s.iconBtn
 
     return createPortal(
-        <div style={getPanelStyle(pos, offset, position)}>
-            <div
-                style={s.panelHeader}
-                {...dragHandlers}
-            >
+        <div style={getPanelStyle(pos, offset, position)} {...dragHandlers}>
+            <div style={s.panelHeader}>
                 <span style={s.panelTitle}>
                     Dev Profiler
                     {instanceCount > 1 && instanceId && (
@@ -224,16 +217,15 @@ export function DevStatsPanel({
                     <button
                         style={exportStyle}
                         onClick={handleExport}
-                        title={exported ? 'Copied!' : 'Copy stats to clipboard'}
+                        title={exported ? 'Exported!' : 'Export stats as JSON'}
                     >
                         {exported ? (
-                            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/>
+                            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3.5 8.5 6.5 11.5 12.5 4.5" />
                             </svg>
                         ) : (
-                            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/>
-                                <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/>
+                            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M8 2v8M4 7l4 4 4-4M2 14h12" />
                             </svg>
                         )}
                     </button>

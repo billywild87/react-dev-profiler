@@ -26,6 +26,8 @@ export const s = {
         userSelect: 'none',
         color: '#ccc',
         fontSize: 11,
+        cursor: 'grab',
+        touchAction: 'none',
     } satisfies CSSProperties,
 
     panelHeader: {
@@ -33,8 +35,6 @@ export const s = {
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 8,
-        cursor: 'grab',
-        touchAction: 'none',
     } satisfies CSSProperties,
 
     panelTitle: {
@@ -69,7 +69,8 @@ export const s = {
         border: 'none',
         color: '#444',
         cursor: 'pointer',
-        padding: 0,
+        padding: 4,
+        margin: -4,
         lineHeight: 1,
         display: 'flex',
         alignItems: 'center',
@@ -86,7 +87,8 @@ export const s = {
         color: '#444',
         cursor: 'pointer',
         fontSize: 13,
-        padding: 0,
+        padding: 4,
+        margin: -4,
         lineHeight: 1,
     } satisfies CSSProperties,
 
@@ -144,24 +146,43 @@ export const s = {
     toggleBtn: {
         position: 'fixed',
         zIndex: 99998,
-        minWidth: 28,
-        height: 24,
-        borderRadius: 7,
-        border: '1px solid #2a2a2a',
-        background: 'rgba(20, 20, 20, 0.9)',
+        height: 26,
+        borderRadius: 13,
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        background: 'rgba(28, 28, 30, 0.92)',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0 6px',
-        backdropFilter: 'blur(8px)',
+        gap: 6,
+        padding: '0 10px 0 8px',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), inset 0 0.5px 0 rgba(255, 255, 255, 0.06)',
+    } satisfies CSSProperties,
+
+    toggleDot: {
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        flexShrink: 0,
     } satisfies CSSProperties,
 
     toggleFps: {
         fontFamily: "'SF Mono', 'Fira Code', monospace",
-        fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: -0.5,
+        fontSize: 11,
+        fontWeight: 600,
+        color: 'rgba(255, 255, 255, 0.85)',
+        letterSpacing: -0.3,
+        lineHeight: 1,
+    } satisfies CSSProperties,
+
+    toggleLabel: {
+        fontFamily: "'SF Mono', 'Fira Code', monospace",
+        fontSize: 9,
+        fontWeight: 500,
+        color: 'rgba(255, 255, 255, 0.35)',
+        letterSpacing: 0,
+        textTransform: 'lowercase',
     } satisfies CSSProperties,
 
     footer: {

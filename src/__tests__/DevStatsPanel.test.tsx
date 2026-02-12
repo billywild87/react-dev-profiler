@@ -88,21 +88,28 @@ describe('DevStatsPanel', () => {
         expect(screen.queryByText('main')).not.toBeInTheDocument()
     })
 
-    it('has an export button that copies stats to clipboard', async () => {
-        const writeText = vi.fn().mockResolvedValue(undefined)
-        Object.assign(navigator, { clipboard: { writeText } })
+    it('has an export button that triggers a JSON download', () => {
+        const clickSpy = vi.fn()
+        const createElementOrig = document.createElement.bind(document)
+        vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+            const el = createElementOrig(tag)
+            if (tag === 'a') el.click = clickSpy
+            return el
+        })
+        vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake')
+        vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
 
         const props = createMockProps()
         render(<DevStatsPanel {...props} />)
 
-        const exportBtn = screen.getByTitle('Copy stats to clipboard')
+        const exportBtn = screen.getByTitle('Export stats as JSON')
         fireEvent.click(exportBtn)
 
-        expect(writeText).toHaveBeenCalledOnce()
-        const json = JSON.parse(writeText.mock.calls[0][0])
-        expect(json).toHaveProperty('timestamp')
-        expect(json).toHaveProperty('frameTime')
-        expect(json).toHaveProperty('profiler')
+        expect(clickSpy).toHaveBeenCalledOnce()
+        expect(URL.createObjectURL).toHaveBeenCalledOnce()
+        expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:fake')
+
+        vi.restoreAllMocks()
     })
 
     it('renders the panel into document.body (portal)', () => {

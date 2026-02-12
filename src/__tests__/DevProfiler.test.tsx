@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { DevProfiler } from '../DevProfiler'
 
 // Mock the child components to avoid portal/rAF complexity
@@ -100,5 +100,49 @@ describe('DevProfiler', () => {
         await vi.waitFor(() => {
             expect(screen.queryByTestId('toggle-button')).not.toBeInTheDocument()
         })
+    })
+
+    it('double toggle returns to initial state (closed)', async () => {
+        render(
+            <DevProfiler>
+                <div>Content</div>
+            </DevProfiler>
+        )
+
+        // Open
+        window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
+        await vi.waitFor(() => {
+            expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
+        })
+
+        // Close
+        window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
+        await vi.waitFor(() => {
+            expect(screen.queryByTestId('stats-panel')).not.toBeInTheDocument()
+            expect(screen.getByTestId('toggle-button')).toBeInTheDocument()
+        })
+    })
+
+    it('toggles on Ctrl+I keyboard shortcut', async () => {
+        render(
+            <DevProfiler>
+                <div>Content</div>
+            </DevProfiler>
+        )
+
+        fireEvent.keyDown(window, { key: 'i', ctrlKey: true })
+
+        await vi.waitFor(() => {
+            expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
+        })
+    })
+
+    it('accepts accentColor prop without crashing', () => {
+        const { container } = render(
+            <DevProfiler accentColor="#ff0000">
+                <div>Content</div>
+            </DevProfiler>
+        )
+        expect(container).toBeTruthy()
     })
 })

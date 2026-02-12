@@ -10,8 +10,48 @@ import { FLASH_OUTLINE } from './styles'
 import type { PanelPosition } from './types'
 
 /**
+ * Returns the effective bounding rect for an element.
+ * For `display: contents` elements (which have no box), computes the
+ * union rect of all direct children so anchoring still works.
+ */
+export function getEffectiveRect(el: HTMLElement): DOMRect {
+    const rect = el.getBoundingClientRect()
+    if (rect.width > 0 || rect.height > 0) return rect
+
+    const children = el.children
+    if (children.length === 0) return rect
+
+    let top = Infinity, left = Infinity, bottom = -Infinity, right = -Infinity
+    for (let i = 0; i < children.length; i++) {
+        const cr = (children[i] as HTMLElement).getBoundingClientRect()
+        if (cr.width === 0 && cr.height === 0) continue
+        top = Math.min(top, cr.top)
+        left = Math.min(left, cr.left)
+        bottom = Math.max(bottom, cr.bottom)
+        right = Math.max(right, cr.right)
+    }
+    if (top === Infinity) return rect
+    return new DOMRect(left, top, right - left, bottom - top)
+}
+
+/**
+ * Returns the direct children that have a real layout box.
+ * Used to attach ResizeObserver when the wrapper itself is `display: contents`.
+ */
+export function getObservableChildren(el: HTMLElement): Element[] {
+    const result: Element[] = []
+    for (let i = 0; i < el.children.length; i++) {
+        const child = el.children[i] as HTMLElement
+        const r = child.getBoundingClientRect()
+        if (r.width > 0 || r.height > 0) result.push(child)
+    }
+    return result
+}
+
+/**
  * Tracks a corner position of a referenced element using ResizeObserver.
  * Used to anchor the panel and toggle button near the profiled component.
+ * Works transparently with `display: contents` wrappers.
  */
 export function useAnchorPosition(
     ref: React.RefObject<HTMLDivElement | null>,
@@ -21,24 +61,27 @@ export function useAnchorPosition(
 
     useEffect(() => {
         if (!ref.current) return
+        const el = ref.current
         const update = () => {
-            if (!ref.current) return
-            const rect = ref.current.getBoundingClientRect()
-            const margin = 8
+            const rect = getEffectiveRect(el)
             switch (position) {
                 case 'top-left':
-                    setPos({ top: rect.top + margin, left: rect.left + margin }); break
+                    setPos({ top: rect.top, left: rect.left }); break
                 case 'top-right':
-                    setPos({ top: rect.top + margin, left: rect.right - margin }); break
+                    setPos({ top: rect.top, left: rect.right }); break
                 case 'bottom-right':
-                    setPos({ top: rect.bottom - margin, left: rect.right - margin }); break
+                    setPos({ top: rect.bottom, left: rect.right }); break
                 case 'bottom-left':
                 default:
-                    setPos({ top: rect.bottom - margin, left: rect.left + margin }); break
+                    setPos({ top: rect.bottom, left: rect.left }); break
             }
         }
+        update()
         const observer = new ResizeObserver(update)
-        observer.observe(ref.current)
+        // Observe the element itself (works if it has a box)
+        // AND its visible children (needed for display:contents)
+        observer.observe(el)
+        for (const child of getObservableChildren(el)) observer.observe(child)
         observer.observe(document.documentElement)
         return () => observer.disconnect()
     }, [ref, position])
@@ -56,9 +99,10 @@ export function useDraggable() {
     const start = useRef({ x: 0, y: 0 })
 
     const onPointerDown = useCallback((e: React.PointerEvent) => {
+        if ((e.target as HTMLElement).closest('button, a, [data-no-drag]')) return
         dragging.current = true
         start.current = { x: e.clientX - offset.x, y: e.clientY - offset.y }
-        ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+        ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     }, [offset])
 
     const onPointerMove = useCallback((e: React.PointerEvent) => {
@@ -88,21 +132,13 @@ export function useDomTracker(wrapperRef: React.RefObject<HTMLDivElement | null>
 
     useEffect(() => {
         if (!enabled || !wrapperRef.current) return
-        const observer = new MutationObserver((records) => {
-            let realMutation = false
-            for (const record of records) {
-                if (record.type === 'attributes' && record.attributeName === 'class') continue
-                realMutation = true
-            }
-            if (realMutation) {
-                mutations.current++
-                dirty.current = true
-            }
+        const observer = new MutationObserver(() => {
+            mutations.current++
+            dirty.current = true
         })
         observer.observe(wrapperRef.current, {
             childList: true,
             subtree: true,
-            attributes: true,
             attributeFilter: ['style'],
         })
         return () => observer.disconnect()
@@ -162,18 +198,20 @@ export function useRenderFlash(wrapperRef: React.RefObject<HTMLDivElement | null
 
     useEffect(() => {
         if (!open || !wrapperRef.current) return
+        const wrapper = wrapperRef.current
         const observer = new MutationObserver(() => {
             mutationCount.current++
-            if (!wrapperRef.current || mutationCount.current <= 1) return
-            const el = wrapperRef.current
-            el.style.outline = FLASH_OUTLINE
-            el.style.outlineOffset = '-2px'
+            if (mutationCount.current <= 1) return
+            // Target the first visible child (display:contents has no box to outline)
+            const target = getObservableChildren(wrapper)[0] as HTMLElement | undefined ?? wrapper
+            target.style.outline = FLASH_OUTLINE
+            target.style.outlineOffset = '-2px'
             setTimeout(() => {
-                el.style.outline = ''
-                el.style.outlineOffset = ''
+                target.style.outline = ''
+                target.style.outlineOffset = ''
             }, 150)
         })
-        observer.observe(wrapperRef.current, { childList: true, subtree: true })
+        observer.observe(wrapper, { childList: true, subtree: true })
         return () => observer.disconnect()
     }, [wrapperRef, open])
 }
