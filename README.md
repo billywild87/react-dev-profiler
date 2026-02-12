@@ -2,8 +2,8 @@
 
 Real-time React performance monitoring for development. Zero overhead in production.
 
-![npm](https://img.shields.io/npm/v/react-dev-profiler)
-![license](https://img.shields.io/npm/l/react-dev-profiler)
+[![npm version](https://img.shields.io/npm/v/react-dev-profiler)](https://www.npmjs.com/package/react-dev-profiler)
+[![license](https://img.shields.io/npm/l/react-dev-profiler)](./LICENSE)
 
 ## What it does
 
