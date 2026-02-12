@@ -10,9 +10,10 @@ import { createPortal } from 'react-dom'
 import { s } from './styles'
 import { useAnchorPosition } from './hooks'
 import type { PanelPosition } from './types'
+import { COLOR_ACCENT, PANEL_GAP } from './constants'
 
 /** Computes fixed-position styles based on the chosen panel position. */
-const GAP = 8
+const GAP = PANEL_GAP
 
 function getButtonStyle(pos: { top: number; left: number }, position: PanelPosition): CSSProperties {
     const style: CSSProperties = { ...s.toggleBtn }
@@ -34,7 +35,7 @@ export function ToggleButton({
     targetRef,
     onClick,
     position = 'bottom-left',
-    accentColor = '#6366f1',
+    accentColor = COLOR_ACCENT,
 }: {
     targetRef: React.RefObject<HTMLDivElement | null>
     onClick: () => void

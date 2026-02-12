@@ -7,5 +7,4 @@
  */
 
 export { DevProfiler } from './DevProfiler'
-export { DevProfiler as default } from './DevProfiler'
 export type { DevStats, ReactProfilerData, PanelPosition } from './types'

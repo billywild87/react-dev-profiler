@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.2.0] — 2026-02-12
+
+### Added
+- `src/constants.ts` — centralized colors (`COLOR_GREEN`, `COLOR_AMBER`, `COLOR_RED`, `COLOR_MUTED`, `COLOR_DIM`, `COLOR_ACCENT`), frame-time thresholds (`FPS_60_MS`, `FPS_30_MS`), graph colors, `PANEL_GAP`, and `ftColor()` helper
+- `src/utils.ts` — extracted `getEffectiveRect` and `getObservableChildren` from `hooks.ts`
+- `src/FrameTimeGraph.tsx` — extracted from `DevStatsPanel`
+- `src/StatRow.tsx` — extracted from `DevStatsPanel`
+- `src/__tests__/utils.test.ts` — dedicated tests for utility functions (6 tests)
+- `accentColor` prop documented in README API table
+- GitHub Actions CI workflow (test + build on Node 20, 22)
+
+### Changed
+- All hardcoded colors and thresholds replaced by constants across components and styles
+- `hooks.ts` re-exports utils for backward compatibility
+- `DevProfiler.tsx` uses `COLOR_ACCENT` instead of hardcoded `'#6366f1'`
+
+### Fixed
+- Removed phantom `./styles.css` export from `package.json` (file did not exist)
+- Removed ambiguous default export from `index.ts` (named export only)
+- Fixed `act()` warnings in `DevProfiler.test.tsx`
+
 ## [1.1.1] — 2026-02-12
 
 ### Changed

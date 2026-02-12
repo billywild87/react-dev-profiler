@@ -88,11 +88,12 @@ All observers are created lazily (only when the panel is open) and cleaned up on
 
 ### `<DevProfiler>`
 
-| Prop       | Type            | Default         | Description                              |
-| ---------- | --------------- | --------------- | ---------------------------------------- |
-| `children` | `ReactNode`     | —               | The subtree to profile                   |
-| `position` | `PanelPosition` | `'bottom-left'` | Where to anchor the panel                |
-| `id`       | `string`        | auto-generated  | Instance label (shown with multi-panels) |
+| Prop          | Type            | Default         | Description                                |
+| ------------- | --------------- | --------------- | ------------------------------------------ |
+| `children`    | `ReactNode`     | —               | The subtree to profile                     |
+| `position`    | `PanelPosition` | `'bottom-left'` | Where to anchor the panel                  |
+| `id`          | `string`        | auto-generated  | Instance label (shown with multi-panels)   |
+| `accentColor` | `string`        | `'#6366f1'`     | Accent color for the toggle button's glow  |
 
 ### `PanelPosition`
 

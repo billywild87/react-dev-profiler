@@ -8,51 +8,14 @@
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { s } from './styles'
-import { useAnchorPosition, useDraggable, useDomTracker, useRenderRate, useLongTasks, getEffectiveRect } from './hooks'
+import { useAnchorPosition, useDraggable, useDomTracker, useRenderRate, useLongTasks } from './hooks'
+import { getEffectiveRect } from './utils'
 import { type ReactProfilerData, type PanelPosition, type DevStats, HISTORY_SIZE, INITIAL_STATS, percentile } from './types'
+import { COLOR_GREEN, COLOR_AMBER, COLOR_RED, COLOR_MUTED, PANEL_GAP, ftColor } from './constants'
+import { FrameTimeGraph } from './FrameTimeGraph'
+import { StatRow } from './StatRow'
 
-/** Rolling bar chart of frame times (last 60 samples). */
-function FrameTimeGraph({ history }: { history: number[] }) {
-    const max = Math.max(33, ...history)
-    const w = 140
-    const h = 32
-    const barW = Math.max(1, w / HISTORY_SIZE - 0.5)
-
-    return (
-        <div style={s.graphWrap}>
-            <svg width={w} height={h} style={{ display: 'block' }}>
-                <rect width={w} height={h} rx={3} fill="#111" />
-                {/* 60 fps guideline */}
-                <line x1={0} y1={h - (16.67 / max) * h} x2={w} y2={h - (16.67 / max) * h}
-                    stroke="#1a3a1a" strokeWidth={1} />
-                {/* 30 fps guideline */}
-                <line x1={0} y1={h - (33 / max) * h} x2={w} y2={h - (33 / max) * h}
-                    stroke="#3a1a1a" strokeWidth={1} />
-                {history.map((ms, i) => {
-                    const x = (i / HISTORY_SIZE) * w
-                    const barH = Math.min((ms / max) * h, h)
-                    const color = ms > 33 ? '#ef4444' : ms > 16.67 ? '#f59e0b' : '#4ade80'
-                    return <rect key={i} x={x} y={h - barH} width={barW} height={barH} fill={color} opacity={0.8} rx={0.5} />
-                })}
-            </svg>
-        </div>
-    )
-}
-
-/** Single label → value row used throughout the panel. */
-function StatRow({ label, value, sub, color = '#4ade80' }: { label: string, value: string, sub?: string, color?: string }) {
-    return (
-        <div style={s.row}>
-            <span style={s.rowLabel}>{label}</span>
-            <span>
-                <span style={{ ...s.rowValue, color }}>{value}</span>
-                {sub && <span style={{ color: '#444', fontSize: 9, marginLeft: 4 }}>{sub}</span>}
-            </span>
-        </div>
-    )
-}
-
-const GAP = 8
+const GAP = PANEL_GAP
 
 /** Computes fixed-position styles based on the chosen panel position + drag offset. */
 function getPanelStyle(
@@ -191,14 +154,14 @@ export function DevStatsPanel({
     }, [stats])
 
     // Color thresholds: green = good, amber = warning, red = bad
-    const ftColor = stats.frameTime > 33 ? '#ef4444' : stats.frameTime > 16.67 ? '#f59e0b' : '#4ade80'
-    const rpsColor = stats.rendersPerSecond > 30 ? '#ef4444' : stats.rendersPerSecond > 10 ? '#f59e0b' : '#4ade80'
-    const actualColor = stats.profiler.actualDuration > 16 ? '#ef4444' : stats.profiler.actualDuration > 8 ? '#f59e0b' : '#4ade80'
+    const frameTColor = ftColor(stats.frameTime)
+    const rpsColor = stats.rendersPerSecond > 30 ? COLOR_RED : stats.rendersPerSecond > 10 ? COLOR_AMBER : COLOR_GREEN
+    const actualColor = stats.profiler.actualDuration > 16 ? COLOR_RED : stats.profiler.actualDuration > 8 ? COLOR_AMBER : COLOR_GREEN
     const fps = stats.frameTime > 0 ? Math.round(1000 / stats.frameTime) : 0
     const memoGain = stats.profiler.baseDuration > 0
         ? Math.round((1 - stats.profiler.actualDuration / stats.profiler.baseDuration) * 100)
         : 0
-    const p99Color = stats.frameTimeP99 > 33 ? '#ef4444' : stats.frameTimeP99 > 16.67 ? '#f59e0b' : '#4ade80'
+    const p99Color = ftColor(stats.frameTimeP99)
 
     const exportStyle: CSSProperties = exported
         ? { ...s.iconBtn, ...s.iconBtnActive }
@@ -240,7 +203,7 @@ export function DevStatsPanel({
 
             <div style={s.body}>
                 <span style={s.section}>Rendering</span>
-                <StatRow label="Frame time" value={`${stats.frameTime.toFixed(1)}ms`} sub={`${fps} fps`} color={ftColor} />
+                <StatRow label="Frame time" value={`${stats.frameTime.toFixed(1)}ms`} sub={`${fps} fps`} color={frameTColor} />
                 <FrameTimeGraph history={stats.frameTimeHistory} />
                 <div style={s.miniRow}>
                     <span>min {stats.frameTimeMin.toFixed(1)}</span>
@@ -248,21 +211,21 @@ export function DevStatsPanel({
                     <span style={{ color: p99Color }}>p99 {stats.frameTimeP99.toFixed(1)}</span>
                 </div>
                 <StatRow label="Renders/s" value={String(stats.rendersPerSecond)} color={rpsColor} />
-                <StatRow label="Long tasks" value={String(stats.longTasks)} color={stats.longTasks > 0 ? '#f59e0b' : '#4ade80'} />
+                <StatRow label="Long tasks" value={String(stats.longTasks)} color={stats.longTasks > 0 ? COLOR_AMBER : COLOR_GREEN} />
 
                 <div style={s.separator} />
                 <span style={s.section}>React Profiler</span>
-                <StatRow label="Phase" value={stats.profiler.phase} color="#888" />
+                <StatRow label="Phase" value={stats.profiler.phase} color={COLOR_MUTED} />
                 <StatRow label="Render" value={`${stats.profiler.actualDuration.toFixed(2)}ms`} color={actualColor} />
-                <StatRow label="Base (no memo)" value={`${stats.profiler.baseDuration.toFixed(2)}ms`} color="#888" />
-                <StatRow label="Memo gain" value={`${memoGain}%`} color={memoGain > 50 ? '#4ade80' : memoGain > 20 ? '#f59e0b' : '#ef4444'} />
+                <StatRow label="Base (no memo)" value={`${stats.profiler.baseDuration.toFixed(2)}ms`} color={COLOR_MUTED} />
+                <StatRow label="Memo gain" value={`${memoGain}%`} color={memoGain > 50 ? COLOR_GREEN : memoGain > 20 ? COLOR_AMBER : COLOR_RED} />
                 <StatRow label="Commits" value={String(stats.profiler.commitCount)} />
 
                 <div style={s.separator} />
                 <span style={s.section}>DOM</span>
                 <StatRow label="Nodes" value={stats.domNodes.toLocaleString()} />
                 <StatRow label="Mutations" value={String(stats.domMutations)} />
-                <StatRow label="Size" value={stats.dimensions} color="#888" />
+                <StatRow label="Size" value={stats.dimensions} color={COLOR_MUTED} />
 
                 <div style={s.separator} />
                 <span style={s.section}>Memory</span>

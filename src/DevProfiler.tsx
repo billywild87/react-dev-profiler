@@ -7,6 +7,7 @@
 
 import { Profiler, useRef, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { type ReactProfilerData, type PanelPosition, INITIAL_PROFILER } from './types'
+import { COLOR_ACCENT } from './constants'
 import { __DEV__ } from './env'
 import { useDomTracker, useRenderRate, useRenderFlash, useLongTasks } from './hooks'
 import { DevStatsPanel } from './DevStatsPanel'
@@ -57,14 +58,14 @@ export function DevProfiler({
     children,
     position = 'bottom-left',
     id,
-    accentColor = '#6366f1',
+    accentColor = COLOR_ACCENT,
 }: {
     children: ReactNode
     /** Where to anchor the panel. @default 'bottom-left' */
     position?: PanelPosition
     /** Optional identifier — shown in the panel when multiple instances are active. */
     id?: string
-    /** Accent color for the toggle button border/glow. @default '#6366f1' */
+    /** Accent color for the toggle button border/glow. @default COLOR_ACCENT */
     accentColor?: string
 }) {
     const wrapperRef = useRef<HTMLDivElement>(null)

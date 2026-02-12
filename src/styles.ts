@@ -6,6 +6,7 @@
  */
 
 import type { CSSProperties } from 'react'
+import { COLOR_GREEN, COLOR_DIM, COLOR_MUTED, COLOR_ACCENT } from './constants'
 
 export const s = {
     wrapper: {
@@ -50,7 +51,7 @@ export const s = {
 
     instanceBadge: {
         background: '#222',
-        color: '#888',
+        color: COLOR_MUTED,
         fontSize: 8,
         padding: '1px 5px',
         borderRadius: 4,
@@ -67,7 +68,7 @@ export const s = {
     iconBtn: {
         background: 'none',
         border: 'none',
-        color: '#444',
+        color: COLOR_DIM,
         cursor: 'pointer',
         padding: 4,
         margin: -4,
@@ -78,13 +79,13 @@ export const s = {
     } satisfies CSSProperties,
 
     iconBtnActive: {
-        color: '#4ade80',
+        color: COLOR_GREEN,
     } satisfies CSSProperties,
 
     closeBtn: {
         background: 'none',
         border: 'none',
-        color: '#444',
+        color: COLOR_DIM,
         cursor: 'pointer',
         fontSize: 13,
         padding: 4,
@@ -99,7 +100,7 @@ export const s = {
     } satisfies CSSProperties,
 
     section: {
-        color: '#444',
+        color: COLOR_DIM,
         fontSize: 8,
         fontWeight: 600,
         letterSpacing: 1,
@@ -133,7 +134,7 @@ export const s = {
     miniRow: {
         display: 'flex',
         justifyContent: 'space-between',
-        color: '#444',
+        color: COLOR_DIM,
         fontSize: 9,
         marginTop: -2,
         marginBottom: 2,
@@ -194,4 +195,4 @@ export const s = {
 }
 
 /** Flash outline class name applied directly via classList. */
-export const FLASH_OUTLINE = '2px solid rgba(99, 102, 241, 0.8)'
+export const FLASH_OUTLINE = `2px solid ${COLOR_ACCENT}cc`

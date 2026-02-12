@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { DevProfiler } from '../DevProfiler'
 
 // Mock the child components to avoid portal/rAF complexity
@@ -72,37 +72,35 @@ describe('DevProfiler', () => {
         expect(wrapper.style.display).toBe('contents')
     })
 
-    it('opens the panel on toggle event', async () => {
+    it('opens the panel on toggle event', () => {
         render(
             <DevProfiler>
                 <div>Content</div>
             </DevProfiler>
         )
 
-        // Dispatch the toggle event
-        window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
-
-        // Wait for state update
-        await vi.waitFor(() => {
-            expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
+        act(() => {
+            window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
         })
+
+        expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
     })
 
-    it('hides the toggle button when panel is open', async () => {
+    it('hides the toggle button when panel is open', () => {
         render(
             <DevProfiler>
                 <div>Content</div>
             </DevProfiler>
         )
 
-        window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
-
-        await vi.waitFor(() => {
-            expect(screen.queryByTestId('toggle-button')).not.toBeInTheDocument()
+        act(() => {
+            window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
         })
+
+        expect(screen.queryByTestId('toggle-button')).not.toBeInTheDocument()
     })
 
-    it('double toggle returns to initial state (closed)', async () => {
+    it('double toggle returns to initial state (closed)', () => {
         render(
             <DevProfiler>
                 <div>Content</div>
@@ -110,31 +108,31 @@ describe('DevProfiler', () => {
         )
 
         // Open
-        window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
-        await vi.waitFor(() => {
-            expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
+        act(() => {
+            window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
         })
+        expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
 
         // Close
-        window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
-        await vi.waitFor(() => {
-            expect(screen.queryByTestId('stats-panel')).not.toBeInTheDocument()
-            expect(screen.getByTestId('toggle-button')).toBeInTheDocument()
+        act(() => {
+            window.dispatchEvent(new CustomEvent('devprofiler:toggle'))
         })
+        expect(screen.queryByTestId('stats-panel')).not.toBeInTheDocument()
+        expect(screen.getByTestId('toggle-button')).toBeInTheDocument()
     })
 
-    it('toggles on Ctrl+I keyboard shortcut', async () => {
+    it('toggles on Ctrl+I keyboard shortcut', () => {
         render(
             <DevProfiler>
                 <div>Content</div>
             </DevProfiler>
         )
 
-        fireEvent.keyDown(window, { key: 'i', ctrlKey: true })
-
-        await vi.waitFor(() => {
-            expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
+        act(() => {
+            fireEvent.keyDown(window, { key: 'i', ctrlKey: true })
         })
+
+        expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
     })
 
     it('accepts accentColor prop without crashing', () => {
